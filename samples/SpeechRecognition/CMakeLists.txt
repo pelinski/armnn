@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED     ON)
 set(CMAKE_C_EXTENSIONS              OFF)
 set(CMAKE_CXX_EXTENSIONS            OFF)
 
-project (speech-recognition-example)
+project(speech-recognition-example)
 
 set(CMAKE_C_FLAGS_DEBUG         "-DDEBUG -O0 -g -fPIC -pthread")
 set(CMAKE_C_FLAGS_RELEASE       "-DNDEBUG -O3 -fPIC -pthread")
@@ -60,5 +60,17 @@ set(APP_TARGET_NAME "${CMAKE_PROJECT_NAME}")
 
 add_executable("${APP_TARGET_NAME}"  ${COMMON_UTILS_SOURCES} ${COMMON_AUDIO_SOURCES} ${SOURCES} ${APP_MAIN})
 
-target_link_libraries("${APP_TARGET_NAME}" PUBLIC ${ARMNN_LIBS} -lsndfile -lsamplerate)
-target_include_directories("${APP_TARGET_NAME}" PUBLIC ${ARMNN_INCLUDE_DIR} )
+
+target_link_libraries("${APP_TARGET_NAME}" PUBLIC ${ARMNN_LIBS})
+target_link_libraries("${APP_TARGET_NAME}" PUBLIC "/sysroot/usr/lib/arm-linux-gnueabihf/libsndfile.so")
+target_link_libraries("${APP_TARGET_NAME}" PUBLIC "/sysroot/usr/lib/libsamplerate.so")
+
+target_include_directories("${APP_TARGET_NAME}" PUBLIC "/opt/armnn-dist/armnn/include/" )
+target_include_directories("${APP_TARGET_NAME}" PUBLIC "/sysroot/usr/include/" )
+target_include_directories("${APP_TARGET_NAME}" PUBLIC "/sysroot/usr/lib/arm-linux-gnueabihf/libsamplerate/include/" )
+
+add_custom_command(
+    TARGET ${APP_TARGET_NAME}
+    POST_BUILD
+    COMMAND rsync --timeout=10 -P ${CMAKE_BINARY_DIR}/bin/${APP_TARGET_NAME} root@$ENV{BBB_HOSTNAME}:~
+)
